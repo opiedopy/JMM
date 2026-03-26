@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PWA Manifest & Apple Meta -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JMM Golf Sim">
+    <meta name="theme-color" content="#00bfff">
+    
+    <title>JMM Golf Sim - Offline Viewer</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); 
+            color: #fff; 
+            min-height: 100vh;
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+        }
+        .icon { 
+            font-size: 4em; 
+            color: #00bfff; 
+            margin-bottom: 10px;
+        }
+        .title { 
+            font-size: 2em; 
+            font-weight: 600; 
+            margin: 10px 0; 
+            background: linear-gradient(45deg, #00bfff, #4dabf7); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            background-clip: text;
+        }
+        .subtitle { font-size: 1.2em; color: #ccc; margin-bottom: 20px; }
+        .footer { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            padding: 12px; 
+            text-align: center; 
+            font-size: 0.85em; 
+            color: #888; 
+            background: rgba(0,0,0,0.9); 
+            border-top: 1px solid #333;
+        }
+        .summary { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+            gap: 16px; 
+            margin: 24px 0; 
+        }
+        .stat { 
+            text-align: center; 
+            padding: 16px; 
+            background: rgba(0,191,255,0.1); 
+            border-radius: 12px; 
+            border: 1px solid rgba(0,191,255,0.2);
+        }
+        .stat-value { 
+            font-size: 1.8em; 
+            font-weight: 700; 
+            color: #00bfff; 
+            margin-bottom: 4px;
+        }
+        .stat-label { font-size: 0.85em; color: #aaa; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 20px; 
+            font-size: 14px; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        th, td { 
+            padding: 14px 12px; 
+            text-align: left; 
+            border-bottom: 1px solid rgba(255,255,255,0.08); 
+        }
+        th { 
+            background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%); 
+            font-weight: 600; 
+            font-size: 13px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+        tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+        tr:hover { background: rgba(0,191,255,0.1); }
+        .metric { 
+            font-weight: 600; 
+            color: #00bfff; 
+            font-family: 'SF Mono', monospace;
+        }
+        .file-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        input[type="file"] {
+            opacity: 0;
+            position: absolute;
+        }
+        .file-button {
+            background: linear-gradient(45deg, #00bfff, #0099cc);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,191,255,0.4);
+            transition: all 0.2s;
+        }
+        .file-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,191,255,0.5); }
+        .loading { text-align: center; padding: 40px; color: #888; }
+        @media (max-width: 768px) { 
+            body { padding: 16px; }
+            table { font-size: 12px; }
+            th, td { padding: 10px 8px; }
+            .file-selector { top: 10px; right: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- File Upload Button -->
+    <div class="file-selector">
+        <input type="file" id="csvFile" accept=".csv" onchange="loadFile(event)">
+        <label for="csvFile" class="file-button">📁 Load CSV</label>
+    </div>
+
+    <div class="header">
+        <div class="icon">⛳</div>
+        <div class="title">JMM Golf Sim</div>
+        <div class="subtitle">Offline Data Viewer & Analyzer</div>
+    </div>
+
+    <div id="summary" class="summary" style="display: none;">
+        <!-- Stats populated by JS -->
+    </div>
+
+    <table id="shotTable">
+        <thead>
+            <tr>
+                <th>Club</th>
+                <th>C. Speed</th>
+                <th>B. Speed</th>
+                <th>Launch</th>
+                <th>Spin</th>
+                <th>Carry</th>
+                <th>Total</th>
+                <th>Attack</th>
+                <th>Path</th>
+                <th>Face</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="10" style="text-align: center; color: #888; padding: 40px;">
+                    📊 Load a Trackman CSV or use sample data below
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">JMM © 2026 | Unofficial Trackman CSV viewer</div>
+
+    <script>
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed'));
+            });
+        }
+
+        // Load sample data on first visit
+        window.addEventListener('load', () => {
+            loadCSV('sample-practice.csv');
+        });
+
+        // File upload handler
+        function loadFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const csvText = e.target.result;
+                    const data = parseCSV(csvText);
+                    updateSummary(data);
+                    renderTable(data);
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // Load CSV from URL or string
+        async function loadCSV(filename) {
+            try {
+                const response = await fetch(filename);
+                if (!response.ok) throw new Error('File not found');
+                const csvText = await response.text();
+                const data = parseCSV(csvText);
+                updateSummary(data);
+                renderTable(data);
+            } catch (e) {
+                console.log('Sample load failed, showing placeholder');
+            }
+        }
+
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) return [];
+            
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            const data = lines.slice(1)
+                .map(line => {
+                    const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+                    return headers.reduce((obj, header, i) => {
+                        obj[header] = values[i] || '';
+                        return obj;
+                    }, {});
+                })
+                .filter(row => 
+                    (row['Club Speed'] && parseFloat(row['Club Speed']) > 0) ||
+                    (row['Ball Speed'] && parseFloat(row['Ball Speed']) > 0)
+                );
+            return data;
+        }
+
+        function updateSummary(data) {
+            if (data.length === 0) return;
+            
+            const speeds = data.map(d => parseFloat(d['Club Speed'] || 0)).filter(s => s > 0);
+            const carries = data.map(d => parseFloat(d['Carry'] || 0)).filter(c => c > 0);
+            
+            const avgSpeed = speeds.reduce((a,b)=>a+b,0)/speeds.length || 0;
+            const avgCarry = carries.reduce((a,b)=>a+b,0)/carries.length || 0;
+            const maxCarry = Math.max(...carries) || 0;
+
+            document.getElementById('summary').innerHTML = `
+                <div class="stat">
+                    <div class="stat-value">${avgSpeed.toFixed(0)}<span style="font-size:0.6em;">mph</span></div>
+                    <div class="stat-label">Avg Club Speed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${avgCarry.toFixed(0)}<span style="font-size:0.6em;">yd</span></div>
+                    <div class="stat-label">Avg Carry</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${maxCarry.toFixed(0)}<span style="font-size:0.6em;">yd</span></div>
+                    <div class="stat-label">Longest Carry</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${data.length}</div>
+                    <div class="stat-label">Total Shots</div>
+                </div>
+            `;
+            document.getElementById('summary').style.display = 'grid';
+        }
+
+        function renderTable(data) {
+            const tbody = document.querySelector('#shotTable tbody');
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#888;padding:40px;">No valid shot data found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.slice(0, 100).map(row => `
+                <tr>
+                    <td>${row.Club || '—'}</td>
+                    <td class="metric">${row['Club Speed'] || '—'}</td>
+                    <td class="metric">${row['Ball Speed'] || '—'}</td>
+                    <td>${row['Launch Angle'] || '—'}</td>
+                    <td>${row['Spin Rate'] || '—'}</td>
+                    <td class="metric">${row['Carry'] || '—'}</td>
+                    <td class="metric">${row['Total'] || '—'}</td>
+                    <td>${row['Attack Angle'] || '—'}</td>
+                    <td>${row['Club Path'] || '—'}</td>
+                    <td>${row['Face Angle'] || '—'}</td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
