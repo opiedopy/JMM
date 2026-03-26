@@ -1,0 +1,31 @@
+{
+  "name": "JMM Golf Sim",
+  "short_name": "JMM Golf",
+  "description": "Offline golf shot data viewer for Trackman CSV exports",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#00bfff",
+  "categories": ["sports", "productivity"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "splash_screens": [
+    {
+      "src": "splash.png",
+      "sizes": "1170x2532",
+      "orientation": "portrait-primary"
+    }
+  ]
+}
