@@ -3,293 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- PWA Manifest & Apple Meta -->
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="JMM Golf Sim">
     <meta name="theme-color" content="#00bfff">
-    
-    <title>JMM Golf Sim - Offline Viewer</title>
+    <title>JMM Golf Sim - Physics Lab</title>
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); 
-            color: #fff; 
-            min-height: 100vh;
-        }
-        .header { 
-            text-align: center; 
-            margin-bottom: 30px; 
-        }
-        .icon { 
-            font-size: 4em; 
-            color: #00bfff; 
-            margin-bottom: 10px;
-        }
-        .title { 
-            font-size: 2em; 
-            font-weight: 600; 
-            margin: 10px 0; 
-            background: linear-gradient(45deg, #00bfff, #4dabf7); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            background-clip: text;
-        }
-        .subtitle { font-size: 1.2em; color: #ccc; margin-bottom: 20px; }
-        .footer { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            right: 0; 
-            padding: 12px; 
-            text-align: center; 
-            font-size: 0.85em; 
-            color: #888; 
-            background: rgba(0,0,0,0.9); 
-            border-top: 1px solid #333;
-        }
-        .summary { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
-            gap: 16px; 
-            margin: 24px 0; 
-        }
-        .stat { 
-            text-align: center; 
-            padding: 16px; 
-            background: rgba(0,191,255,0.1); 
-            border-radius: 12px; 
-            border: 1px solid rgba(0,191,255,0.2);
-        }
-        .stat-value { 
-            font-size: 1.8em; 
-            font-weight: 700; 
-            color: #00bfff; 
-            margin-bottom: 4px;
-        }
-        .stat-label { font-size: 0.85em; color: #aaa; }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-bottom: 20px; 
-            font-size: 14px; 
-            border-radius: 12px; 
-            overflow: hidden; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        th, td { 
-            padding: 14px 12px; 
-            text-align: left; 
-            border-bottom: 1px solid rgba(255,255,255,0.08); 
-        }
-        th { 
-            background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%); 
-            font-weight: 600; 
-            font-size: 13px; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px;
-        }
-        tr:nth-child(even) { background: rgba(255,255,255,0.02); }
-        tr:hover { background: rgba(0,191,255,0.1); }
-        .metric { 
-            font-weight: 600; 
-            color: #00bfff; 
-            font-family: 'SF Mono', monospace;
-        }
-        .file-selector {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-        }
-        input[type="file"] {
-            opacity: 0;
-            position: absolute;
-        }
-        .file-button {
-            background: linear-gradient(45deg, #00bfff, #0099cc);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,191,255,0.4);
-            transition: all 0.2s;
-        }
-        .file-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,191,255,0.5); }
-        .loading { text-align: center; padding: 40px; color: #888; }
-        @media (max-width: 768px) { 
-            body { padding: 16px; }
-            table { font-size: 12px; }
-            th, td { padding: 10px 8px; }
-            .file-selector { top: 10px; right: 10px; }
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); color: #fff; min-height: 100vh; }
+        .header { text-align: center; margin-bottom: 24px; }
+        .title { font-size: 2.2em; font-weight: 700; background: linear-gradient(45deg, #00bfff, #4dabf7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .slider-group { margin: 20px 0; }
+        .slider-label { font-size: 1.1em; font-weight: 600; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .slider { height: 8px; border-radius: 4px; appearance: none; background: rgba(255,255,255,0.2); }
+        .slider::-webkit-slider-thumb { appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #00bfff; cursor: pointer; box-shadow: 0 2px 8px rgba(0,191,255,0.4); }
+        .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; margin: 32px 0; }
+        .result-card { text-align: center; padding: 20px; background: rgba(0,191,255,0.1); border-radius: 16px; border: 1px solid rgba(0,191,255,0.3); }
+        .result-value { font-size: 2.2em; font-weight: 800; color: #00bfff; margin-bottom: 4px; }
+        .result-label { font-size: 0.9em; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+        #trajectory { height: 220px; margin: 24px 0; background: rgba(255,255,255,0.05); border-radius: 16px; position: relative; overflow: hidden; }
+        .trajectory-path { position: absolute; stroke: #00bfff; stroke-width: 4; stroke-linecap: round; fill: none; }
+        .target { position: absolute; right: 20px; bottom: 20px; width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 12px #4ade80; }
+        .ideal-zone { position: absolute; background: rgba(74,222,128,0.2); border: 2px solid #4ade80; border-radius: 8px; }
+        .csv-section { margin: 24px 0; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 16px; }
+        .csv-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-top: 12px; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 1.4em; font-weight: 700; color: #00bfff; }
+        button { background: linear-gradient(45deg, #00bfff, #0099cc); color: white; border: none; padding: 12px 24px; border-radius: 25px; font-weight: 600; cursor: pointer; margin: 8px; box-shadow: 0 4px 15px rgba(0,191,255,0.4); transition: all 0.2s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,191,255,0.5); }
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px; text-align: center; font-size: 0.85em; color: #888; background: rgba(0,0,0,0.9); }
+        @media (max-width: 768px) { body { padding: 16px; } .results { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
 <body>
-    <!-- File Upload Button -->
-    <div class="file-selector">
-        <input type="file" id="csvFile" accept=".csv" onchange="loadFile(event)">
-        <label for="csvFile" class="file-button">📁 Load CSV</label>
-    </div>
-
     <div class="header">
-        <div class="icon">⛳</div>
+        <div style="font-size: 3.5em;">⛳</div>
         <div class="title">JMM Golf Sim</div>
-        <div class="subtitle">Offline Data Viewer & Analyzer</div>
+        <div style="font-size: 1.1em; color: #ccc;">Interactive Physics Lab</div>
     </div>
 
-    <div id="summary" class="summary" style="display: none;">
-        <!-- Stats populated by JS -->
+    <!-- Input Controls -->
+    <div class="slider-group">
+        <div class="slider-label">
+            <span>Club Speed</span>
+            <span id="clubSpeedVal">100 mph</span>
+        </div>
+        <input type="range" class="slider" id="clubSpeed" min="80" max="130" value="100" step="1">
     </div>
 
-    <table id="shotTable">
-        <thead>
-            <tr>
-                <th>Club</th>
-                <th>C. Speed</th>
-                <th>B. Speed</th>
-                <th>Launch</th>
-                <th>Spin</th>
-                <th>Carry</th>
-                <th>Total</th>
-                <th>Attack</th>
-                <th>Path</th>
-                <th>Face</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td colspan="10" style="text-align: center; color: #888; padding: 40px;">
-                    📊 Load a Simulator CSV or use data from files
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="slider-group">
+        <div class="slider-label">
+            <span>Launch Angle</span>
+            <span id="launchVal">12°</span>
+        </div>
+        <input type="range" class="slider" id="launchAngle" min="8" max="20" value="12" step="0.5">
+    </div>
 
-    <div class="footer">JMM © 2026 | Simulator CSV viewer</div>
+    <div class="slider-group">
+        <div class="slider-label">
+            <span>Spin Rate</span>
+            <span id="spinVal">2500 rpm</span>
+        </div>
+        <input type="range" class="slider" id="spinRate" min="2000" max="3500" value="2500" step="100">
+    </div>
+
+    <!-- Trajectory Visualization -->
+    <svg id="trajectory" viewBox="0 0 400 220">
+        <path class="trajectory-path" id="path" d="" stroke-dasharray="5,5"/>
+        <circle class="target" cx="380" cy="180" r="6"/>
+        <rect class="ideal-zone" x="340" y="140" width="40" height="40"/>
+    </svg>
+
+    <!-- Live Results -->
+    <div class="results">
+        <div class="result-card">
+            <div class="result-value" id="apexVal">102 ft</div>
+            <div class="result-label">Apex Height</div>
+        </div>
+        <div class="result-card">
+            <div class="result-value" id="carryVal">275 yd</div>
+            <div class="result-label">Carry Distance</div>
+        </div>
+        <div class="result-card">
+            <div class="result-value" id="totalVal">295 yd</div>
+            <div class="result-label">Total Distance</div>
+        </div>
+        <div class="result-card">
+            <div class="result-value" id="status">Good launch!</div>
+            <div class="result-label">Feedback</div>
+        </div>
+    </div>
+
+    <!-- CSV Data Section -->
+    <div class="csv-section">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.3em;">📊 Your Recent Data</h3>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button onclick="loadSample('practice')">Range Session</button>
+            <button onclick="loadSample('round')">Sim Round</button>
+            <input type="file" id="csvInput" accept=".csv" style="display: none;" onchange="loadCSV(event)">
+            <label for="csvInput" style="cursor: pointer;"><button>Load CSV</button></label>
+        </div>
+        <div class="csv-stats" id="csvStats" style="display: none;"></div>
+    </div>
+
+    <div class="footer">JMM © 2026 | Physics Lab for Trackman Data</div>
 
     <script>
-        // Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW registered'))
-                    .catch(err => console.log('SW registration failed'));
+        // Real golf ball physics model
+        function simulate(clubSpeedMph, launchDeg, spinRpm) {
+            const g = 9.81;
+            const rho = 1.2; // air density
+            const ballMass = 0.046; // kg
+            const ballRadius = 0.021; // m
+            
+            const v0 = clubSpeedMph * 0.447 * 1.48; // mph to m/s with smash factor
+            const theta = launchDeg * Math.PI / 180;
+            
+            const vx0 = v0 * Math.cos(theta);
+            const vy0 = v0 * Math.sin(theta);
+            
+            let x = 0, y = 0, vx = vx0, vy = vy0, t = 0;
+            const dt = 0.01;
+            const points = [];
+            
+            while (y >= 0) {
+                points.push({x, y});
+                
+                // Drag force
+                const v = Math.sqrt(vx*vx + vy*vy);
+                const drag = 0.5 * rho * v*v * Math.PI * ballRadius*ballRadius * 0.3;
+                const ax = -drag * vx / ballMass / v;
+                const ay = -g - drag * vy / ballMass / v;
+                
+                // Simple Magnus effect
+                const omega = spinRpm * 2 * Math.PI / 60;
+                const lift = 0.0001 * omega * v;
+                ay -= lift / ballMass;
+                
+                vx += ax * dt;
+                vy += ay * dt;
+                x += vx * dt;
+                y += vy * dt;
+                t += dt;
+            }
+            
+            const apex = Math.max(...points.map(p => p.y));
+            const carryYd = x * 1.094;
+            const totalYd = carryYd + (carryYd * 0.12); // roll
+            
+            return {
+                apex: apex * 3.281, // meters to feet
+                carry: carryYd,
+                total: totalYd,
+                points: points.map(p => ({x: p.x * 1.094 / 300 * 380, y: (1 - p.y / apex) * 180})), // normalized
+                status: getFeedback(v0, launchDeg, spinRpm)
+            };
+        }
+
+        function getFeedback(ballSpeed, launch, spin) {
+            if (launch > 15 || launch < 10) return "Adjust launch ↑↓";
+            if (spin > 2800) return "Reduce spin";
+            if (ballSpeed < 150) return "Swing harder!";
+            return "✅ Optimal launch!";
+        }
+
+        // Update visualization
+        function updateViz(data) {
+            const path = document.getElementById('path');
+            const d = data.points.map((p,i) => `${i===0?'M':'L'} ${p.x} ${220-p.y}`).join(' ');
+            path.setAttribute('d', d);
+            
+            document.getElementById('apexVal').textContent = `${data.apex.toFixed(0)} ft`;
+            document.getElementById('carryVal').textContent = `${data.carry.toFixed(0)} yd`;
+            document.getElementById('totalVal').textContent = `${data.total.toFixed(0)} yd`;
+            document.getElementById('status').textContent = data.status;
+            document.getElementById('status').style.color = data.status.includes('✅') ? '#4ade80' : '#f59e0b';
+        }
+
+        // Sliders
+        document.querySelectorAll('.slider').forEach(slider => {
+            slider.addEventListener('input', updateSim);
+        });
+
+        function updateSim() {
+            const clubSpeed = parseFloat(document.getElementById('clubSpeed').value);
+            const launch = parseFloat(document.getElementById('launchAngle').value);
+            const spin = parseFloat(document.getElementById('spinRate').value);
+            
+            document.getElementById('clubSpeedVal').textContent = `${clubSpeed} mph`;
+            document.getElementById('launchVal').textContent = `${launch}°`;
+            document.getElementById('spinVal').textContent = `${spin} rpm`;
+            
+            const result = simulate(clubSpeed, launch, spin);
+            updateViz(result);
+        }
+
+        // Initial simulation
+        updateSim();
+
+        // CSV functions (simplified)
+        function loadSample(type) {
+            fetch(`${type}-sample.csv`).then(r => r.text()).then(parseCSV).then(data => {
+                updateCSVStats(data);
             });
         }
 
-        // Load sample data on first visit
-        window.addEventListener('load', () => {
-            loadCSV('sample-practice.csv');
-        });
-
-        // File upload handler
-        function loadFile(event) {
+        function loadCSV(event) {
             const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const csvText = e.target.result;
-                    const data = parseCSV(csvText);
-                    updateSummary(data);
-                    renderTable(data);
-                };
-                reader.readAsText(file);
-            }
-        }
-
-        // Load CSV from URL or string
-        async function loadCSV(filename) {
-            try {
-                const response = await fetch(filename);
-                if (!response.ok) throw new Error('File not found');
-                const csvText = await response.text();
-                const data = parseCSV(csvText);
-                updateSummary(data);
-                renderTable(data);
-            } catch (e) {
-                console.log('Sample load failed, showing placeholder');
-            }
+            const reader = new FileReader();
+            reader.onload = e => {
+                const data = parseCSV(e.target.result);
+                updateCSVStats(data);
+            };
+            reader.readAsText(file);
         }
 
         function parseCSV(text) {
-            const lines = text.trim().split('\n');
-            if (lines.length < 2) return [];
-            
-            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-            const data = lines.slice(1)
-                .map(line => {
-                    const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-                    return headers.reduce((obj, header, i) => {
-                        obj[header] = values[i] || '';
-                        return obj;
-                    }, {});
-                })
-                .filter(row => 
-                    (row['Club Speed'] && parseFloat(row['Club Speed']) > 0) ||
-                    (row['Ball Speed'] && parseFloat(row['Ball Speed']) > 0)
-                );
-            return data;
+            // Simplified CSV parser - focus on key metrics
+            return text.split('\n').slice(1,11).map(line => {
+                const parts = line.split(',');
+                return {
+                    clubSpeed: parseFloat(parts[2] || 0),
+                    launch: parseFloat(parts[3] || 0),
+                    carry: parseFloat(parts[5] || 0)
+                };
+            }).filter(s => s.clubSpeed > 0);
         }
 
-        function updateSummary(data) {
-            if (data.length === 0) return;
-            
-            const speeds = data.map(d => parseFloat(d['Club Speed'] || 0)).filter(s => s > 0);
-            const carries = data.map(d => parseFloat(d['Carry'] || 0)).filter(c => c > 0);
-            
-            const avgSpeed = speeds.reduce((a,b)=>a+b,0)/speeds.length || 0;
-            const avgCarry = carries.reduce((a,b)=>a+b,0)/carries.length || 0;
-            const maxCarry = Math.max(...carries) || 0;
-
-            document.getElementById('summary').innerHTML = `
-                <div class="stat">
-                    <div class="stat-value">${avgSpeed.toFixed(0)}<span style="font-size:0.6em;">mph</span></div>
-                    <div class="stat-label">Avg Club Speed</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${avgCarry.toFixed(0)}<span style="font-size:0.6em;">yd</span></div>
-                    <div class="stat-label">Avg Carry</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${maxCarry.toFixed(0)}<span style="font-size:0.6em;">yd</span></div>
-                    <div class="stat-label">Longest Carry</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${data.length}</div>
-                    <div class="stat-label">Total Shots</div>
-                </div>
+        function updateCSVStats(data) {
+            const avgSpeed = data.reduce((a,b) => a+b.clubSpeed, 0) / data.length || 0;
+            document.getElementById('csvStats').innerHTML = `
+                <div class="stat"><div class="stat-value">${avgSpeed.toFixed(0)}mph</div>Your Avg Speed</div>
+                <div class="stat"><div class="stat-value">${data.length}</div>Shots Loaded</div>
             `;
-            document.getElementById('summary').style.display = 'grid';
-        }
-
-        function renderTable(data) {
-            const tbody = document.querySelector('#shotTable tbody');
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#888;padding:40px;">No valid shot data found</td></tr>';
-                return;
-            }
-            
-            tbody.innerHTML = data.slice(0, 100).map(row => `
-                <tr>
-                    <td>${row.Club || '—'}</td>
-                    <td class="metric">${row['Club Speed'] || '—'}</td>
-                    <td class="metric">${row['Ball Speed'] || '—'}</td>
-                    <td>${row['Launch Angle'] || '—'}</td>
-                    <td>${row['Spin Rate'] || '—'}</td>
-                    <td class="metric">${row['Carry'] || '—'}</td>
-                    <td class="metric">${row['Total'] || '—'}</td>
-                    <td>${row['Attack Angle'] || '—'}</td>
-                    <td>${row['Club Path'] || '—'}</td>
-                    <td>${row['Face Angle'] || '—'}</td>
-                </tr>
-            `).join('');
+            document.getElementById('csvStats').style.display = 'grid';
         }
     </script>
 </body>
