@@ -1,7 +1,7 @@
 {
   "name": "JMM Golf Sim",
   "short_name": "JMM Golf",
-  "description": "Offline golf shot data viewer for Trackman CSV exports",
+  "description": "Offline golf shot data viewer for JMM SIM CSV exports",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0a0a",
