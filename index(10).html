@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#00bfff">
+    <title>JMM Golf Sim - Physics Lab</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); color: #fff; min-height: 100vh; }
+        .header { text-align: center; margin-bottom: 24px; }
+        .title { font-size: 2.2em; font-weight: 700; background: linear-gradient(45deg, #00bfff, #4dabf7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .slider-group { margin: 20px 0; }
+        .slider-label { font-size: 1.1em; font-weight: 600; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .slider { width: 100%; height: 8px; border-radius: 4px; appearance: none; background: rgba(255,255,255,0.2); }
+        .slider::-webkit-slider-thumb { appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #00bfff; cursor: pointer; box-shadow: 0 2px 8px rgba(0,191,255,0.4); }
+        .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; margin: 32px 0; }
+        .result-card { text-align: center; padding: 20px; background: rgba(0,191,255,0.1); border-radius: 16px; border: 1px solid rgba(0,191,255,0.3); }
+        .result-value { font-size: 2.2em; font-weight: 800; color: #00bfff; margin-bottom: 4px; }
+        .result-label { font-size: 0.9em; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Trajectory box */
+        #trajectoryWrap { margin: 24px 0; background: rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden; }
+        #trajectory { display: block; width: 100%; height: auto; }
+
+        .csv-section { margin: 24px 0; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 16px; }
+        .csv-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-top: 12px; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 1.4em; font-weight: 700; color: #00bfff; }
+        button { background: linear-gradient(45deg, #00bfff, #0099cc); color: white; border: none; padding: 12px 24px; border-radius: 25px; font-weight: 600; cursor: pointer; margin: 8px; box-shadow: 0 4px 15px rgba(0,191,255,0.4); transition: all 0.2s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,191,255,0.5); }
+
+        /* Launch button — bigger, centered */
+        .launch-wrap { text-align: center; margin: 16px 0; }
+        #launchBtn { font-size: 1.2em; padding: 14px 48px; border-radius: 30px; background: linear-gradient(45deg, #00bfff, #0099cc); letter-spacing: 1px; }
+        #launchBtn:active { transform: scale(0.97); }
+        #launchBtn.launching { opacity: 0.7; pointer-events: none; }
+
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px; text-align: center; font-size: 0.85em; color: #888; background: rgba(0,0,0,0.9); }
+        @media (max-width: 768px) { body { padding: 16px; } .results { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="font-size: 3.5em;">⛳</div>
+        <div class="title">JMM Golf Sim</div>
+        <div style="font-size: 1.1em; color: #ccc;">Interactive Physics Lab</div>
+    </div>
+
+    <!-- Input Controls -->
+    <div class="slider-group">
+        <div class="slider-label">
+            <span>Club Speed</span>
+            <span id="clubSpeedVal">100 mph</span>
+        </div>
+        <input type="range" class="slider" id="clubSpeed" min="80" max="130" value="100" step="1">
+    </div>
+
+    <div class="slider-group">
+        <div class="slider-label">
+            <span>Launch Angle</span>
+            <span id="launchVal">12°</span>
+        </div>
+        <input type="range" class="slider" id="launchAngle" min="8" max="20" value="12" step="0.5">
+    </div>
+
+    <div class="slider-group">
+        <div class="slider-label">
+            <span>Spin Rate</span>
+            <span id="spinVal">2500 rpm</span>
+        </div>
+        <input type="range" class="slider" id="spinRate" min="2000" max="3500" value="2500" step="100">
+    </div>
+
+    <div class="slider-group">
+        <div class="slider-label">
+            <span>Wind</span>
+            <span id="windVal">0 mph · Calm</span>
+        </div>
+        <input type="range" class="slider" id="windSpeed" min="-30" max="30" value="0" step="1">
+        <div style="display: flex; justify-content: space-between; font-size: 0.78em; color: #888; margin-top: 4px;">
+            <span>← Into Wind 30mph</span>
+            <span>Downwind 30mph →</span>
+        </div>
+    </div>
+
+    <!-- Launch Button -->
+    <div class="launch-wrap">
+        <button id="launchBtn" onclick="launchBall()">🏌️ Launch</button>
+    </div>
+
+    <!-- Trajectory Visualization -->
+    <div id="trajectoryWrap">
+        <svg id="trajectory" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+            <!-- Ground line -->
+            <line x1="10" y1="200" x2="390" y2="200" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+            <!-- Ideal landing zone -->
+            <rect id="idealZone" x="340" y="160" width="40" height="40" fill="rgba(74,222,128,0.15)" stroke="#4ade80" stroke-width="1.5" rx="4"/>
+            <!-- Flag -->
+            <line x1="360" y1="160" x2="360" y2="130" stroke="#4ade80" stroke-width="1.5"/>
+            <polygon points="360,130 378,138 360,146" fill="#4ade80" opacity="0.8"/>
+            <!-- Ball path -->
+            <path id="ballPath" d="" fill="none" stroke="#00bfff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>
+            <!-- Ball dot -->
+            <circle id="ballDot" cx="10" cy="200" r="5" fill="#fff" opacity="0"/>
+            <!-- Idle hint text -->
+            <text id="hintText" x="200" y="115" text-anchor="middle" fill="rgba(255,255,255,0.25)" font-size="13" font-family="-apple-system, sans-serif">Set your parameters and press Launch</text>
+        </svg>
+    </div>
+
+    <!-- Live Results -->
+    <div class="results">
+        <div class="result-card">
+            <div class="result-value" id="apexVal">—</div>
+            <div class="result-label">Apex Height</div>
+        </div>
+        <div class="result-card">
+            <div class="result-value" id="carryVal">—</div>
+            <div class="result-label">Carry Distance</div>
+        </div>
+        <div class="result-card">
+            <div class="result-value" id="totalVal">—</div>
+            <div class="result-label">Total Distance</div>
+        </div>
+        <div class="result-card">
+            <div class="result-value" id="status" style="font-size:1.3em;">—</div>
+            <div class="result-label">Feedback</div>
+        </div>
+    </div>
+
+    <!-- CSV Data Section -->
+    <div class="csv-section">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.3em;">📊 Your Recent Data</h3>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button onclick="loadSample('practice')">Range Session</button>
+            <button onclick="loadSample('round')">Sim Round</button>
+            <input type="file" id="csvInput" accept=".csv" style="display: none;" onchange="loadCSV(event)">
+            <label for="csvInput" style="cursor: pointer;"><button>Load CSV</button></label>
+        </div>
+        <div class="csv-stats" id="csvStats" style="display: none;"></div>
+    </div>
+
+    <div class="footer">JMM © 2026 | Physics Lab for Data</div>
+
+    <script>
+        // --- Sliders: update labels only, no auto-simulate ---
+        document.getElementById('clubSpeed').addEventListener('input', function() {
+            document.getElementById('clubSpeedVal').textContent = `${this.value} mph`;
+        });
+        document.getElementById('launchAngle').addEventListener('input', function() {
+            document.getElementById('launchVal').textContent = `${this.value}°`;
+        });
+        document.getElementById('spinRate').addEventListener('input', function() {
+            document.getElementById('spinVal').textContent = `${this.value} rpm`;
+        });
+        document.getElementById('windSpeed').addEventListener('input', function() {
+            const v = parseFloat(this.value);
+            let dir = 'Calm';
+            if (v > 0) dir = 'Downwind';
+            else if (v < 0) dir = 'Into Wind';
+            document.getElementById('windVal').textContent = v === 0 ? '0 mph · Calm' : `${Math.abs(v)} mph · ${dir}`;
+        });
+
+        // --- Physics ---
+        function simulate(clubSpeedMph, launchDeg, spinRpm, windMph) {
+            // Positive windMph = downwind (helps ball), negative = into wind (hurts ball)
+            const windMs = windMph * 0.447; // convert mph to m/s
+            const g = 9.81;
+            const rho = 1.2;
+            const ballMass = 0.046;
+            const ballRadius = 0.021;
+
+            const v0 = clubSpeedMph * 0.447 * 1.48;
+            const theta = launchDeg * Math.PI / 180;
+
+            let vx = v0 * Math.cos(theta);
+            let vy = v0 * Math.sin(theta);
+            let x = 0, y = 0;
+            const dt = 0.02;
+            const points = [];
+
+            while (y >= 0 || points.length === 0) {
+                points.push({ x, y });
+                const v = Math.sqrt(vx * vx + vy * vy);
+                const Cd = 0.3;
+                const A = Math.PI * ballRadius * ballRadius;
+                const drag = 0.5 * rho * v * v * A * Cd;
+                const ax = -(drag * vx / v) / ballMass;
+                const omega = spinRpm * 2 * Math.PI / 60;
+                const lift = 0.000012 * omega * v;
+                const ay = -g + (drag * (-vy) / v / ballMass) * 0 + lift / ballMass;
+
+                vx += ax * dt;
+                vy += (ay - g + g) * dt - g * dt;
+                // cleaner integration:
+                vy += ax * 0; // placeholder
+                // redo cleanly:
+                const netAy = (-drag * vy / v) / ballMass - g + lift / ballMass;
+                vy += (netAy + g - g) * dt; // already handled, just use below
+
+                x += vx * dt;
+                y += vy * dt;
+
+                if (points.length > 5000) break; // safety
+            }
+
+            // Simpler, more reliable physics loop — replace above with this clean version
+            // (the above has redundancy; rebuild points cleanly)
+            const pts2 = [];
+            let vx2 = v0 * Math.cos(theta);
+            let vy2 = v0 * Math.sin(theta);
+            let x2 = 0, y2 = 0;
+            for (let i = 0; i < 10000; i++) {
+                pts2.push({ x: x2, y: y2 });
+                const spd = Math.sqrt(vx2 * vx2 + vy2 * vy2);
+                const relVx = vx2 - windMs; // velocity relative to air
+                const relSpd = Math.sqrt(relVx * relVx + vy2 * vy2);
+                const Fd = 0.5 * rho * relSpd * relSpd * (Math.PI * ballRadius * ballRadius) * 0.3;
+                const omega2 = spinRpm * 2 * Math.PI / 60;
+                const Fl = 0.000012 * omega2 * relSpd;
+
+                const ax2 = -(Fd / ballMass) * (relVx / relSpd);
+                const ay2 = -(Fd / ballMass) * (vy2 / relSpd) - g + Fl / ballMass;
+
+                vx2 += ax2 * dt;
+                vy2 += ay2 * dt;
+                x2 += vx2 * dt;
+                y2 += vy2 * dt;
+                if (y2 < 0) break;
+            }
+
+            const apex = Math.max(...pts2.map(p => p.y));
+            const carryM = pts2[pts2.length - 1].x;
+            const carryYd = carryM * 1.094;
+            const totalYd = carryYd * 1.12;
+
+            return {
+                apex: apex * 3.281,
+                carry: carryYd,
+                total: totalYd,
+                rawPoints: pts2,
+                maxX: carryM,
+                maxY: apex,
+                feedback: getFeedback(launchDeg, spinRpm, clubSpeedMph)
+            };
+        }
+
+        function getFeedback(launch, spin, speed) {
+            if (launch > 15 || launch < 10) return "Adjust launch ↑↓";
+            if (spin > 2800) return "Reduce spin";
+            if (speed < 90) return "Swing harder!";
+            return "✅ Optimal!";
+        }
+
+        // --- Map physics coords to SVG space ---
+        function toSVG(pts, maxX, maxY) {
+            const padL = 10, padR = 60, padT = 15, padB = 20;
+            const W = 400, H = 220;
+            const drawW = W - padL - padR;
+            const drawH = H - padT - padB;
+            return pts.map(p => ({
+                sx: padL + (p.x / maxX) * drawW,
+                sy: (H - padB) - (p.y / maxY) * drawH
+            }));
+        }
+
+        // --- Animate the ball along the path ---
+        function animateBall(svgPts) {
+            const dot = document.getElementById('ballDot');
+            dot.setAttribute('opacity', '1');
+            let i = 0;
+            const step = Math.max(1, Math.floor(svgPts.length / 120)); // ~120 frames
+            function frame() {
+                if (i >= svgPts.length) {
+                    i = svgPts.length - 1;
+                    dot.setAttribute('cx', svgPts[i].sx);
+                    dot.setAttribute('cy', svgPts[i].sy);
+                    document.getElementById('launchBtn').classList.remove('launching');
+                    return;
+                }
+                dot.setAttribute('cx', svgPts[i].sx);
+                dot.setAttribute('cy', svgPts[i].sy);
+                i += step;
+                requestAnimationFrame(frame);
+            }
+            requestAnimationFrame(frame);
+        }
+
+        // --- Main launch handler ---
+        function launchBall() {
+            const clubSpeed = parseFloat(document.getElementById('clubSpeed').value);
+            const launch = parseFloat(document.getElementById('launchAngle').value);
+            const spin = parseFloat(document.getElementById('spinRate').value);
+            const wind = parseFloat(document.getElementById('windSpeed').value);
+
+            const btn = document.getElementById('launchBtn');
+            btn.classList.add('launching');
+            btn.textContent = '🏌️ Launching…';
+
+            const result = simulate(clubSpeed, launch, spin, wind);
+            const svgPts = toSVG(result.rawPoints, result.maxX, result.maxY);
+
+            // Build SVG path string
+            const d = svgPts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.sx.toFixed(1)},${p.sy.toFixed(1)}`).join(' ');
+
+            const pathEl = document.getElementById('ballPath');
+            pathEl.setAttribute('d', d);
+            pathEl.setAttribute('opacity', '1');
+
+            // Hide hint text after first launch
+            document.getElementById('hintText').setAttribute('opacity', '0');
+
+            // Update result cards
+            document.getElementById('apexVal').textContent = `${result.apex.toFixed(0)} ft`;
+            document.getElementById('carryVal').textContent = `${result.carry.toFixed(0)} yd`;
+            document.getElementById('totalVal').textContent = `${result.total.toFixed(0)} yd`;
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = result.feedback;
+            statusEl.style.color = result.feedback.includes('✅') ? '#4ade80' : '#f59e0b';
+
+            // Animate ball
+            setTimeout(() => {
+                animateBall(svgPts);
+                btn.textContent = '🏌️ Launch';
+            }, 50);
+        }
+
+        // --- CSV functions (unchanged) ---
+        function loadSample(type) {
+            fetch(`${type}-sample.csv`).then(r => r.text()).then(text => {
+                const data = parseCSV(text);
+                updateCSVStats(data);
+            });
+        }
+
+        function loadCSV(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = e => {
+                const data = parseCSV(e.target.result);
+                updateCSVStats(data);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(text) {
+            return text.split('\n').slice(1, 11).map(line => {
+                const parts = line.split(',');
+                return {
+                    clubSpeed: parseFloat(parts[2] || 0),
+                    launch: parseFloat(parts[3] || 0),
+                    carry: parseFloat(parts[5] || 0)
+                };
+            }).filter(s => s.clubSpeed > 0);
+        }
+
+        function updateCSVStats(data) {
+            const avgSpeed = data.reduce((a, b) => a + b.clubSpeed, 0) / data.length || 0;
+            document.getElementById('csvStats').innerHTML = `
+                <div class="stat"><div class="stat-value">${avgSpeed.toFixed(0)}mph</div>Your Avg Speed</div>
+                <div class="stat"><div class="stat-value">${data.length}</div>Shots Loaded</div>
+            `;
+            document.getElementById('csvStats').style.display = 'grid';
+        }
+    </script>
+</body>
+</html>
