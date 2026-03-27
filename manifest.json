@@ -21,11 +21,10 @@
       "purpose": "any maskable"
     }
   ],
-  "splash_screens": [
-    {
-      "src": "splash.png",
-      "sizes": "1170x2532",
-      "orientation": "portrait-primary"
-    }
-  ]
+  "splash_screens": "splash_screens": [
+  {
+    "src": "splash-iphone-6-5-414x896.png",
+    "sizes": "414x896"
+  }
+]
 }
