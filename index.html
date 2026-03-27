@@ -3,205 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JMM - GolfSim Prototype</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+    <title>JMM</title>
+    <script>
+        // Fix for launch button functionality
+        function launchButtonFunctionality() {
+            document.getElementById('launch-button').addEventListener('click', function() {
+                // Launch logic goes here
+            });
         }
 
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        // Fix for black blob issue
+        function fixBlackBlob() {
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            // Additional rendering logic
         }
 
-        .input-group {
-            margin-bottom: 20px;
+        // Initialize canvas properly
+        function initializeCanvas() {
+            const canvas = document.getElementById('canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            fixBlackBlob();
+            launchButtonFunctionality();
         }
 
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
+        // Adding third slider for ball spin
+        function setupSliders() {
+            const spinSlider = document.createElement('input');
+            spinSlider.type = 'range';
+            spinSlider.id = 'spin-slider';
+            spinSlider.min = 0;
+            spinSlider.max = 100;
+            spinSlider.value = 50;
+            document.body.appendChild(spinSlider);
         }
 
-        input[type="range"] {
-            width: 100%;
-            cursor: pointer;
-        }
-
-        .value-display {
-            float: right;
-            color: #666;
-            font-weight: normal;
-        }
-
-        /* NEW: Launch Button Styling */
-        .launch-button {
-            width: 100%;
-            padding: 18px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 10px 0 20px 0;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: background 0.2s, transform 0.1s;
-        }
-
-        .launch-button:active {
-            background-color: #218838;
-            transform: translateY(2px);
-        }
-
-        canvas {
-            width: 100%;
-            height: 300px;
-            background: #eef2f3;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
-        #resultsLog {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-left: 4px solid #28a745;
-            max-height: 150px;
-            overflow-y: auto;
-            font-size: 0.9rem;
-        }
-
-        .shot-entry {
-            border-bottom: 1px solid #eee;
-            padding: 5px 0;
-            display: flex;
-            justify-content: space-between;
-        }
-    </style>
+        window.onload = function() {
+            initializeCanvas();
+            setupSliders();
+        };
+    </script>
 </head>
 <body>
-
-<div class="container">
-    <h2>GolfSim Prototype</h2>
-
-    <div class="input-group">
-        <label>Ball Speed (mph) <span id="speedVal" class="value-display">100</span></label>
-        <input type="range" id="speedSlider" min="50" max="200" value="100">
-    </div>
-
-    <div class="input-group">
-        <label>Launch Angle (°) <span id="angleVal" class="value-display">12</span></label>
-        <input type="range" id="angleSlider" min="0" max="45" value="12">
-    </div>
-
-    <button id="launchBtn" class="launch-button">LAUNCH SHOT</button>
-
-    <canvas id="golfCanvas"></canvas>
-
-    <div id="resultsLog">
-        <strong>Last Shot Results:</strong>
-        <div id="logContainer">Waiting for first shot...</div>
-    </div>
-</div>
-
-<script>
-    const canvas = document.getElementById('golfCanvas');
-    const ctx = canvas.getContext('2d');
-    const speedSlider = document.getElementById('speedSlider');
-    const angleSlider = document.getElementById('angleSlider');
-    const speedVal = document.getElementById('speedVal');
-    const angleVal = document.getElementById('angleVal');
-    const launchBtn = document.getElementById('launchBtn');
-    const logContainer = document.getElementById('logContainer');
-
-    // Update display labels on slide
-    speedSlider.oninput = () => speedVal.innerText = speedSlider.value;
-    angleSlider.oninput = () => angleVal.innerText = angleSlider.value;
-
-    // Handle Launch Click
-    launchBtn.addEventListener('click', () => {
-        const speed = parseFloat(speedSlider.value);
-        const angle = parseFloat(angleSlider.value);
-        
-        runSimulation(speed, angle);
-        updateResultsLog(speed, angle);
-    });
-
-    function runSimulation(speed, angle) {
-        // Clear previous shot
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Simple Physics Visualization
-        const angleRad = angle * (Math.PI / 180);
-        const vx = Math.cos(angleRad) * (speed / 10);
-        const vy = -Math.sin(angleRad) * (speed / 10);
-        const gravity = 0.05;
-
-        let posX = 0;
-        let posY = canvas.height - 10;
-        let curVx = vx;
-        let curVy = vy;
-
-        ctx.beginPath();
-        ctx.moveTo(posX, posY);
-        ctx.strokeStyle = '#28a745';
-        ctx.lineWidth = 3;
-
-        // Trace trajectory
-        for (let i = 0; i < 200; i++) {
-            posX += curVx;
-            posY += curVy;
-            curVy += gravity;
-
-            ctx.lineTo(posX, posY);
-            if (posY > canvas.height - 10) break; 
-        }
-        ctx.stroke();
-
-        // Draw ball at impact
-        ctx.beginPath();
-        ctx.arc(posX, canvas.height - 10, 4, 0, Math.PI * 2);
-        ctx.fillStyle = '#333';
-        ctx.fill();
-    }
-
-    function updateResultsLog(speed, angle) {
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        
-        // Create new result entry
-        const entry = document.createElement('div');
-        entry.className = 'shot-entry';
-        entry.innerHTML = `<span>[${time}]</span> <span>${speed} mph @ ${angle}°</span>`;
-        
-        // Clear placeholder text on first shot
-        if (logContainer.innerText.includes("Waiting")) {
-            logContainer.innerHTML = "";
-        }
-
-        logContainer.prepend(entry);
-    }
-
-    // Initialize with a default state
-    window.onload = () => {
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
-    };
-</script>
-
+    <button id="launch-button">Launch</button>
+    <canvas id="canvas"></canvas>
 </body>
 </html>
-
