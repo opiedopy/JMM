@@ -143,7 +143,30 @@
     </div>
 
     <div class="footer">JMM © 2026 | Physics Lab for Data</div>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then((reg) => {
+    
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+      
+          newWorker.addEventListener('statechange', () => {
+             // Check if the new worker has finished installing
+             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+               // THIS is where you trigger your banner
+               showUpdateBanner(); 
+        }
+      });
+    });
+    
+  });
+}
 
+function showUpdateBanner() {
+  const updateConfirmed = confirm("New version available! Reload now?");
+  if (updateConfirmed) {
+    window.location.reload();
+  }
+}
     <script>
         // --- Sliders: update labels only, no auto-simulate ---
         document.getElementById('clubSpeed').addEventListener('input', function() {
