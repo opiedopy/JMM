@@ -1,6 +1,6 @@
 {
-  "name": "JMM Golf Sim",
-  "short_name": "JMM Golf",
+  "name": "JMM Golf Physics Sim",
+  "short_name": "GolfSim Arc",
   "description": "Offline golf shot data viewer for JMM SIM CSV exports",
   "start_url": "./index.html",
   "display": "standalone",
