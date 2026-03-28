@@ -1,4 +1,4 @@
-const cacheName = 'golf-fly-v4'; // Change this to v3, v4, etc. to force an update
+const cacheName = 'golf-fly-v5'; // Change this to v3, v4, etc. to force an update
 const assets = [
   'index.html',
   'manifest.json',
