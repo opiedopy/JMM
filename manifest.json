@@ -19,18 +19,20 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-     {
+    },
+    {
       "src": "jmm-golf-1032.png",
       "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "splash_screens": "splash_screens": [
-  {
-    "src": "jmm-golf-1032.png",
-    "sizes": "414x896"
-  }
-]
+  "screenshots": [
+    {
+      "src": "jmm-golf-1032.png",
+      "sizes": "414x896",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
 }
