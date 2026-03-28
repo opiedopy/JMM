@@ -1,24 +1,43 @@
-const CACHE_NAME = 'jmm-golf-v1';
-const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
-  './sample-practice.csv',
-  './sample-round.csv'
+const cacheName = 'golf-fly-v2'; // Change this to v3, v4, etc. to force an update
+const assets = [
+  'index.html',
+  'manifest.json',
+  'jmm-golf-1024.png'
 ];
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+// 1. INSTALL: Save the files into the "Vault" (Cache)
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(cacheName).then(cache => {
+      return Promise.all(
+        assets.map(url => cache.add(url).catch(err => console.log('Failed to cache:', url, err)))
+      );
+    })
   );
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
+// 2. ACTIVATE: Housekeeping - Delete old versions of the cache
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.map(key => {
+          if (key !== cacheName) {
+            console.log('Cleaning up old cache:', key);
+            return caches.delete(key);
+          }
+        })
+      );
+    })
   );
 });
+
+// 3. FETCH: Serve from the "Vault" if offline
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(res => {
+      return res || fetch(e.request);
+    })
+  );
+});
+
